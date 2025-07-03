@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "MangaBuff Badge Injector",
+  "version": "1.0",
+  "permissions": [
+    "cookies",
+    "tabs",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8000/*",
+    "https://mangabuff.ru/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://mangabuff.ru/*"],
+      "js": ["auth_content.js"],
+      "run_at": "document_end"
+    },
+    {
+      "matches": ["https://mangabuff.ru/cards/*/users*"],
+      "run_at": "document_end",
+      "js": ["integrated_category_badge.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  "action": {
+    "default_title": "MangaBuff Badge Injector"
+  }
+}
