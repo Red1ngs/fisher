@@ -142,12 +142,14 @@ class CardService:
             result = {}
             users_map = self.get_categories_for_users(users)
             for user_id, db_category in users_map.items():
-                if db_category not in ("normal", "blocked"):
-                    actual_category = db_category
-                else:
-                    actual_category = parser_service.fetch_user_category(user_id)
-                    self.validate_category(actual_category)
-                    self.db.update_user_partial(user_id, category=actual_category)
+                
+                actual_category = parser_service.fetch_user_category(user_id)
+                self.validate_category(actual_category)
+                if db_category != actual_category:
+                    if db_category not in ("normal", "blocked"):
+                        actual_category = db_category
+                    else:
+                        self.db.update_user_partial(user_id, category=actual_category)
 
                 result[str(user_id)] = {
                     "category": actual_category,
