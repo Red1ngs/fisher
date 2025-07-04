@@ -225,6 +225,14 @@ console.log("🔄 integrated_category_badge.js loaded (placeholder optimized)");
       return placeholder;
     }
 
+    static replaceAllBadgesWithPlaceholders() {
+      const badges = document.querySelectorAll(".badge-i");
+      badges.forEach(badge => {
+        const placeholder = this.createBadgePlaceholder();
+        badge.parentNode.replaceChild(placeholder, badge);
+      });
+    }
+
     static replacePlaceholderWithBadge(placeholder, badgeInfo) {
       if (!placeholder || !placeholder.parentNode) return;
 
@@ -916,6 +924,9 @@ console.log("🔄 integrated_category_badge.js loaded (placeholder optimized)");
         return;
       }
 
+      // Сбросить все бейджи в плейсхолдеры перед загрузкой новых
+      BadgePlaceholderManager.replaceAllBadgesWithPlaceholders();
+      
       try {
         Logger.info(`Fetching and rendering: ${category}, page: ${page}`);
         const response = await ApiClient.fetchUsersByCategory(category, cardId, page);

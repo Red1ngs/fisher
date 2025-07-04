@@ -274,7 +274,7 @@ class UserCardDB(DatabaseManager):
             affected_rows = self._execute_query(query, tuple(values))
             
             if affected_rows == 0:
-                logger.warning(f"No rows updated for card {card_id}, user {user_id}")
+                logger.ing(f"No rows updated for card {card_id}, user {user_id}")
             else:
                 logger.info(f"Card {card_id} updated for user {user_id}")
                 
@@ -300,7 +300,7 @@ class UserCardDB(DatabaseManager):
             affected_rows = self._execute_query(query, tuple(values))
 
             if affected_rows == 0:
-                logger.warning(f"No rows updated for user {user_id}")
+                logger.ing(f"No rows updated for user {user_id}")
             else:
                 logger.info(f"User {user_id} updated with fields: {list(fields.keys())}")
 

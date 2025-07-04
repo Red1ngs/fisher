@@ -73,7 +73,7 @@
     static async processAuthentication() {
       try {
         if (!DOMHelper.isAuthenticated()) {
-          Logger.warn("User not authenticated — skipping");
+          Logger.info("User not authenticated — skipping");
           return;
         }
 
@@ -171,7 +171,7 @@
   async function initialize() {
     try {
       if (!DOMHelper.isAuthenticated()) {
-        Logger.warn("Page has no 'isAuth' class — skipping script entirely");
+        Logger.info("Page has no 'isAuth' class — skipping script entirely");
         chrome.runtime.sendMessage({ type: "CLEAR_TOKEN" });
         return;
       }
