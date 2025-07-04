@@ -172,6 +172,7 @@
     try {
       if (!DOMHelper.isAuthenticated()) {
         Logger.warn("Page has no 'isAuth' class — skipping script entirely");
+        chrome.runtime.sendMessage({ type: "CLEAR_TOKEN" });
         return;
       }
 

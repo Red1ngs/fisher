@@ -68,6 +68,13 @@ class StorageManager {
       });
     });
   }
+
+  static async remove(key) {
+    this.cache.delete(key);
+    return new Promise(resolve => {
+      chrome.storage.local.remove(key, resolve);
+    });
+  }
   
   static async set(key, value) {
     this.cache.set(key, value);
@@ -526,6 +533,13 @@ const MessageHandlers = {
       Logger.error("FORCE_REAUTH failed:", error.message);
       sendResponse({ success: false, error: error.message });
     }
+  },
+
+  async CLEAR_TOKEN(msg, sender, sendResponse) {
+    await StorageManager.remove(CONFIG.STORAGE_KEYS.TOKEN);
+    chrome.storage.local.get(null, data => Logger.info("Storage after CLEAR_TOKEN:", data));
+    Logger.info("Auth token fully removed by content script");
+    sendResponse && sendResponse({ success: true });
   },
 
   // Получить токен
