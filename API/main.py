@@ -1,6 +1,8 @@
 """
 Основное приложение FastAPI для управления карточками пользователей.
 """
+import log_config # noqa: F401
+
 import logging
 from contextlib import contextmanager
 from typing import Dict
@@ -23,7 +25,7 @@ from exceptions import (
 from profile_service import profile_service
 from card_service import create_card_service
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 # Создание приложения FastAPI
 app = FastAPI(

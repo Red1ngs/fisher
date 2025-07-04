@@ -1,6 +1,8 @@
 """
 Сервис для парсинга данных с веб-сайта.
 """
+import log_config # noqa: F401
+
 import time
 import os
 import json
@@ -22,7 +24,7 @@ from exceptions import (
 from profile_service import profile_service
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class ParserService:

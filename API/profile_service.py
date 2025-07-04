@@ -1,6 +1,8 @@
 """
 Сервис для работы с профилем пользователя и токенами.
 """
+import log_config # noqa: F401
+
 import json
 import uuid  # noqa: F401
 import logging
@@ -15,7 +17,7 @@ from exceptions import (
 )
 from models import ProfileData
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class ProfileService:

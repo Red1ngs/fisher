@@ -1,0 +1,65 @@
+.health-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.health-status-toggle {
+  font-size: 24px;        /* увеличили до 20px */
+  color: #888;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: color .2s ease;
+}
+
+.health-status-toggle:hover {
+  color: #444;
+}
+
+.health-badge-container {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: #fff;
+  padding: 4px;                  /* уменьшили отступ */
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+  display: inline-grid;          /* подгоняет ширину под контент */
+  grid-template-columns: repeat(auto-fit, 36px);
+  grid-auto-rows: 36px;
+  gap: 4px;                      /* уменьшили зазор между бейджами */
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s ease, transform .3s ease;
+  z-index: 1000;
+}
+
+.health-badge-container.open {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.health-badge-btn {
+  width: 36px;            /* фиксированный размер бейджа */
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;        /* чуть поменьше, чтобы не вылезало */
+  border: none;
+  border-radius: 4px;
+  background: #f5f5f5;
+  cursor: pointer;
+  transition: background .2s ease, transform .1s ease;
+  padding: 0;             /* убрали внутренние отступы */
+}
+
+.health-badge-btn:hover {
+  background: #eaeaea;
+  transform: scale(1.1);
+}

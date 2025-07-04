@@ -22,10 +22,16 @@
       "run_at": "document_end"
     },
     {
+      "matches": ["https://mangabuff.ru/users/*"],
+      "js": ["profile_content.js"],
+      "run_at": "document_end",
+      "css": ["profile.css"]
+    },
+    {
       "matches": ["https://mangabuff.ru/cards/*/users*"],
       "run_at": "document_end",
       "js": ["integrated_category_badge.js"],
-      "css": ["styles.css"]
+      "css": ["badge.css"]
     }
   ],
   "action": {

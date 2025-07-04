@@ -539,6 +539,34 @@ const MessageHandlers = {
     }
   },
 
+  async SET_USER_STATUS(msg, sender, sendResponse) {
+    try {
+      Logger.info("SET_USER_STATUS called with data:", msg.data); // Логируем входящие данные
+
+      const { user_id, category } = msg.data;
+      if (!user_id || !category) {
+        throw new Error("Missing required parameters");
+      }
+
+      const token = await AuthManager.getToken();
+      if (!token) {
+        throw new Error("No authentication token available");
+      }
+
+      const response = await ApiClient.makeRequest('/set_user_status', {
+        method: 'POST',
+        body: JSON.stringify({ token, user_id, category }),
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 30000,
+      });
+
+      sendResponse({ success: true, data: response });
+    } catch (error) {
+      Logger.error("SET_USER_STATUS failed:", error.message);
+      sendResponse({ success: false, error: error.message });
+    }
+  },
+
   // Получить куки (для обратной совместимости)
   async GET_COOKIES(msg, sender, sendResponse) {
     try {
@@ -573,15 +601,15 @@ const MessageHandlers = {
       const cached = await StorageManager.get(CONFIG.STORAGE_KEYS.HEALTH_CACHE);
       
       if (cached && Date.now() - cached.timestamp < CONFIG.CACHE_DURATION) {
-        sendResponse({ category: cached.category });
+        sendResponse(cached.category || {}); // Возвращаем объект категорий напрямую
         return;
       }
 
       const data = await ApiClient.checkHealth();
-      sendResponse({ category: data.category || null });
+      sendResponse(data.category || {}); // Возвращаем объект категорий напрямую
     } catch (error) {
       Logger.error("GET_HEALTH_CATEGORY failed:", error.message);
-      sendResponse({ category: null });
+      sendResponse({});
     }
   },
 

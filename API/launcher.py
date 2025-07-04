@@ -1,43 +1,29 @@
+import log_config
+
 import os
 import sys
 import threading
 import signal
 import subprocess
-import logging
-import logging.handlers
 import psutil
 
 from PIL import Image, ImageDraw
 from pystray import Icon, MenuItem, Menu
 
-LOG_PATH = "api.log"
-MAX_LOG_SIZE = 5 * 1024 * 1024
-BACKUP_COUNT = 3
-
-# Ротация логов
-file_handler = logging.handlers.RotatingFileHandler(
-    LOG_PATH, maxBytes=MAX_LOG_SIZE, backupCount=BACKUP_COUNT, encoding="utf-8"
-)
-file_handler.setFormatter(logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-))
-root_logger = logging.getLogger()
-root_logger.setLevel(logging.INFO)
-root_logger.handlers = [file_handler, logging.StreamHandler(sys.stdout)]
-for name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
-    lg = logging.getLogger(name)
-    lg.handlers = [file_handler, logging.StreamHandler(sys.stdout)]
-    lg.propagate = False
-    lg.setLevel(logging.INFO)
+# Абсолютный путь к директории скрипта и лог-файлу
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LOG_PATH = os.path.join(BASE_DIR, "api.log")
 
 API_HOST = "127.0.0.1"
 API_PORT = 8000
 uvicorn_proc = None
 
+logger = log_config.root_logger
+logger.info("Програма инициализирована")
+
 def find_process_using_port(port: int):
     for proc in psutil.process_iter(["pid", "name"]):
         try:
-            # Запрашиваем соединения отдельно
             conns = proc.net_connections(kind="inet")
             for conn in conns:
                 if conn.status == psutil.CONN_LISTEN and conn.laddr.port == port:
@@ -48,7 +34,6 @@ def find_process_using_port(port: int):
 
 
 def force_kill_tree(pid: int, timeout: float = 3.0):
-    """Сначала TERMINATE, ждём, затем KILL."""
     try:
         parent = psutil.Process(pid)
     except psutil.NoSuchProcess:
@@ -77,27 +62,17 @@ def kill_existing_api():
 
 def start_uvicorn():
     global uvicorn_proc
+    cmd = [
+        sys.executable, "-m", "uvicorn",
+        "main:app", "--host", API_HOST,
+        "--port", str(API_PORT), "--workers", "3"
+    ]
+
     if sys.platform.startswith("win"):
-        # Windows: новая группа процессов
         flags = subprocess.CREATE_NEW_PROCESS_GROUP
-        uvicorn_proc = subprocess.Popen(
-            [
-                sys.executable, "-m", "uvicorn",
-                "main:app", "--host", API_HOST,
-                "--port", str(API_PORT), "--workers", "3"
-            ],
-            creationflags=flags
-        )
+        uvicorn_proc = subprocess.Popen(cmd, creationflags=flags, start_new_session=True, cwd=BASE_DIR)
     else:
-        # Unix: новая сессия (PGID)
-        uvicorn_proc = subprocess.Popen(
-            [
-                sys.executable, "-m", "uvicorn",
-                "main:app", "--host", API_HOST,
-                "--port", str(API_PORT), "--workers", "3"
-            ],
-            preexec_fn=os.setsid
-        )
+        uvicorn_proc = subprocess.Popen(cmd, preexec_fn=os.setsid, cwd=BASE_DIR)
 
 def create_icon_image() -> Image.Image:
     img = Image.new("RGB", (64, 64), color="black")
@@ -115,26 +90,37 @@ def show_log(_, __):
         os.system(f'{term} -e less +F "{LOG_PATH}"')
 
 def exit_app(icon, _):
-    # 1. Сначала пробуем мягко
+    # Попытка мягкого завершения
     if uvicorn_proc and uvicorn_proc.poll() is None:
-        if sys.platform.startswith("win"):
-            uvicorn_proc.send_signal(signal.CTRL_BREAK_EVENT)
-        else:
-            os.killpg(os.getpgid(uvicorn_proc.pid), signal.SIGTERM)
+        try:
+            if sys.platform.startswith("win"):
+                uvicorn_proc.send_signal(signal.CTRL_BREAK_EVENT)
+            else:
+                os.killpg(os.getpgid(uvicorn_proc.pid), signal.SIGTERM)
+            psutil.wait_procs([psutil.Process(uvicorn_proc.pid)], timeout=1.0)
+        except Exception:
+            pass
 
-        # ждём полсекунды
-        psutil.wait_procs([psutil.Process(uvicorn_proc.pid)], timeout=0.5)
-
-    # 2. Если всё ещё висит — добиваем
+    # Если uvicorn жив — насильственно убить его дерево
     if uvicorn_proc and uvicorn_proc.poll() is None:
-        if sys.platform.startswith("win"):
-            force_kill_tree(uvicorn_proc.pid)
-        else:
-            os.killpg(os.getpgid(uvicorn_proc.pid), signal.SIGKILL)
+        force_kill_tree(uvicorn_proc.pid)
 
-    # 3. На всякий случай — сканируем порт
+    # Убить процессы, занимающие порт
     kill_existing_api()
+
     icon.stop()
+
+    # Жестко завершить текущий процесс и терминал
+    if sys.platform.startswith("win"):
+        import ctypes
+        ctypes.windll.kernel32.TerminateProcess(ctypes.windll.kernel32.GetCurrentProcess(), 0)
+        os._exit(0)
+    else:
+        try:
+            os.killpg(0, signal.SIGKILL)
+        except Exception:
+            pass
+        os._exit(0)
 
 def main():
     kill_existing_api()

@@ -1,6 +1,8 @@
 """
 Модуль для работы с базой данных SQLite.
 """
+import log_config # noqa: F401
+
 import sqlite3
 import logging
 from typing import List, Dict, Optional, Any, Tuple
@@ -14,7 +16,7 @@ from exceptions import (
     UserCardError
 )
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class DatabaseManager:
